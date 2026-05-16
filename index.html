@@ -145,6 +145,27 @@
             color: #000;
             box-shadow: 0 0 20px var(--neon-green);
         }
+
+        /* Durum Log Konsolu */
+        .status-console {
+            margin-top: 25px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.8rem;
+            height: 110px;
+            overflow-y: auto;
+            text-align: left;
+            color: #a5c3db;
+        }
+
+        .log-line {
+            margin-bottom: 4px;
+        }
+        .log-success { color: var(--neon-green); }
+        .log-info { color: var(--cyber-blue); }
+        .log-error { color: #ff5f56; }
     </style>
 </head>
 <body>
@@ -154,10 +175,10 @@
     <div class="glass-panel">
         <div class="panel-header">
             <h2>SMS Gönderim Paneli</h2>
-            <p>Numarayı tanımlayın ve sms.php sistemini tetikleyin</p>
+            <p>Netlify Uyumlu Statik Kontrol Merkezi</p>
         </div>
 
-        <form action="sms.php" method="POST">
+        <form id="controlForm" onsubmit="islemBaslat(event)">
             <div class="input-group">
                 <label for="phone">Hedef Telefon Numarası</label>
                 <div class="input-field-wrapper">
@@ -166,12 +187,17 @@
                 </div>
             </div>
 
-            <button type="submit" class="start-btn">Sistemi Başlat</button>
+            <button type="submit" class="start-btn" id="submitBtn">Sistemi Başlat</button>
         </form>
+
+        <div class="status-console" id="consoleLog">
+            <div class="log-line log-info">[SİSTEM] Modül hazır. Netlify üzerinde aktif.</div>
+            <div class="log-line">[SİSTEM] Numara girişi bekleniyor...</div>
+        </div>
     </div>
 
     <script>
-        // Arka plan akan kod efekti
+        // Arka plan akan kod efekti (Matrix)
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
 
@@ -197,6 +223,46 @@
             }
         }
         setInterval(draw, 33);
+
+        // PHP mantığını HTML/JS içinde simüle eden fonksiyon
+        function islemBaslat(event) {
+            event.preventDefault();
+            
+            const phoneInput = document.getElementById('phone').value.trim();
+            const consoleLog = document.getElementById('consoleLog');
+            const btn = document.getElementById('submitBtn');
+            
+            // Sadece sayıları filtrele
+            const cleanPhone = phoneInput.replace(/[^0-9]/g, '');
+
+            if (cleanPhone.length !== 10) {
+                addLog('[HATA] Geçersiz numara biçimi. Başında sıfır olmadan 10 hane girin.', 'log-error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "İŞLENİYOR...";
+
+            addLog(`[BİLGİ] +90 ${cleanPhone} için istek paketi hazırlanıyor...`, 'log-info');
+
+            // 1 saniye simülasyon gecikmesi sonrası başarı logu ekleme (utils.php yerine tetikleme görünümü)
+            setTimeout(() => {
+                addLog(`[BAŞARILI] Hedef tanımlandı: +90 ${cleanPhone}`, 'log-success');
+                addLog(`[SİSTEM] spammers/utils.php simülasyonu çalıştırıldı.`, 'log-success');
+                
+                btn.disabled = false;
+                btn.innerText = "SİSTEMİ BAŞLAT";
+            }, 1200);
+        }
+
+        function addLog(text, className) {
+            const consoleLog = document.getElementById('consoleLog');
+            const newLine = document.createElement('div');
+            newLine.className = `log-line ${className}`;
+            newLine.innerText = text;
+            consoleLog.appendChild(newLine);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
     </script>
 </body>
 </html>
