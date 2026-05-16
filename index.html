@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siber Panel - Kontrol Merkezi</title>
+    <title>Siber Panel - Döngüsel Tetikleyici</title>
     <style>
         :root {
             --neon-green: #00ff66;
@@ -11,6 +11,7 @@
             --dark-bg: #050a0e;
             --panel-bg: rgba(10, 16, 22, 0.75);
             --border-color: rgba(0, 255, 110, 0.25);
+            --error-red: #ff5f56;
         }
 
         * {
@@ -31,7 +32,6 @@
             position: relative;
         }
 
-        /* Matrix Arka Plan Alanı */
         #bg-canvas {
             position: absolute;
             top: 0;
@@ -42,7 +42,6 @@
             opacity: 0.15;
         }
 
-        /* Merkezi Kontrol Paneli */
         .glass-panel {
             position: relative;
             z-index: 10;
@@ -68,13 +67,6 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
-            font-weight: 700;
-        }
-
-        .panel-header p {
-            font-size: 0.85rem;
-            color: #8da2b5;
-            margin-top: 5px;
         }
 
         .input-group {
@@ -87,66 +79,65 @@
             font-size: 0.8rem;
             color: var(--cyber-blue);
             text-transform: uppercase;
-            letter-spacing: 1px;
             margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .input-field-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .prefix {
-            position: absolute;
-            left: 15px;
-            color: #557085;
-            font-size: 0.95rem;
-            user-select: none;
         }
 
         .phone-input {
             width: 100%;
-            padding: 14px 15px 14px 50px;
+            padding: 14px;
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             color: #fff;
             font-size: 1rem;
-            letter-spacing: 1px;
             outline: none;
-            transition: all 0.3s ease;
         }
 
-        .phone-input:focus {
-            border-color: var(--cyber-blue);
-            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+        .btn-container {
+            display: flex;
+            gap: 10px;
         }
 
-        .start-btn {
-            width: 100%;
+        .btn {
+            flex: 1;
             padding: 14px;
-            background: linear-gradient(135deg, rgba(0, 255, 102, 0.1), rgba(0, 229, 255, 0.1));
-            border: 1px solid var(--neon-green);
-            color: var(--neon-green);
             border-radius: 8px;
             font-size: 1rem;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 2px;
             cursor: pointer;
-            transition: all 0.4s ease;
-            margin-top: 10px;
+            transition: all 0.3s;
         }
 
-        .start-btn:hover {
+        .start-btn {
+            background: transparent;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .start-btn:hover:not(:disabled) {
             background: var(--neon-green);
             color: #000;
             box-shadow: 0 0 20px var(--neon-green);
         }
 
-        /* Durum Log Konsolu */
+        .stop-btn {
+            background: transparent;
+            border: 1px solid var(--error-red);
+            color: var(--error-red);
+        }
+
+        .stop-btn:hover:not(:disabled) {
+            background: var(--error-red);
+            color: #000;
+            box-shadow: 0 0 20px var(--error-red);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
         .status-console {
             margin-top: 25px;
             background: rgba(0, 0, 0, 0.5);
@@ -154,18 +145,16 @@
             border-radius: 8px;
             padding: 12px;
             font-size: 0.8rem;
-            height: 110px;
+            height: 150px;
             overflow-y: auto;
             text-align: left;
             color: #a5c3db;
         }
 
-        .log-line {
-            margin-bottom: 4px;
-        }
+        .log-line { margin-bottom: 4px; }
         .log-success { color: var(--neon-green); }
         .log-info { color: var(--cyber-blue); }
-        .log-error { color: #ff5f56; }
+        .log-error { color: var(--error-red); }
     </style>
 </head>
 <body>
@@ -174,47 +163,39 @@
 
     <div class="glass-panel">
         <div class="panel-header">
-            <h2>SMS Gönderim Paneli</h2>
-            <p>Netlify Uyumlu Statik Kontrol Merkezi</p>
+            <h2>Sürekli Tetikleyici</h2>
         </div>
 
-        <form id="controlForm" onsubmit="islemBaslat(event)">
+        <form onsubmit="baslatDöngü(event)">
             <div class="input-group">
-                <label for="phone">Hedef Telefon Numarası</label>
-                <div class="input-field-wrapper">
-                    <span class="prefix">+90</span>
-                    <input type="tel" id="phone" name="phone" class="phone-input" placeholder="5xx xxx xx xx" maxlength="10" required autocomplete="off">
-                </div>
+                <label for="phone">Hedef Numara</label>
+                <input type="tel" id="phone" class="phone-input" placeholder="5xx xxxxxxx" maxlength="10" required>
             </div>
 
-            <button type="submit" class="start-btn" id="submitBtn">Sistemi Başlat</button>
+            <div class="btn-container">
+                <button type="submit" class="btn start-btn" id="startBtn">Başlat</button>
+                <button type="button" class="btn stop-btn" id="stopBtn" onclick="durdurDöngü()" disabled>Durdur</button>
+            </div>
         </form>
 
         <div class="status-console" id="consoleLog">
-            <div class="log-line log-info">[SİSTEM] Modül hazır. Netlify üzerinde aktif.</div>
-            <div class="log-line">[SİSTEM] Numara girişi bekleniyor...</div>
+            <div class="log-line log-info">[SİSTEM] Hazır.</div>
         </div>
     </div>
 
     <script>
-        // Arka plan akan kod efekti (Matrix)
+        // Matrix Efekti
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const chars = '0123456789ABCDEF'.split('');
         const fontSize = 12;
         const columns = canvas.width / fontSize;
         const drops = Array(Math.floor(columns)).fill(1);
 
         function draw() {
-            ctx.fillStyle = 'rgba(5, 10, 14, 0.05)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00ff66';
-            ctx.font = fontSize + 'px monospace';
-
+            ctx.fillStyle = 'rgba(5, 10, 14, 0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff66'; ctx.font = fontSize + 'px monospace';
             for (let i = 0; i < drops.length; i++) {
                 const text = chars[Math.floor(Math.random() * chars.length)];
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
@@ -224,35 +205,44 @@
         }
         setInterval(draw, 33);
 
-        // PHP mantığını HTML/JS içinde simüle eden fonksiyon
-        function islemBaslat(event) {
-            event.preventDefault();
-            
-            const phoneInput = document.getElementById('phone').value.trim();
-            const consoleLog = document.getElementById('consoleLog');
-            const btn = document.getElementById('submitBtn');
-            
-            // Sadece sayıları filtrele
-            const cleanPhone = phoneInput.replace(/[^0-9]/g, '');
+        // Döngü Yönetimi
+        let donguInterval = null;
+        let sayac = 0;
 
-            if (cleanPhone.length !== 10) {
-                addLog('[HATA] Geçersiz numara biçimi. Başında sıfır olmadan 10 hane girin.', 'log-error');
+        function baslatDöngü(event) {
+            event.preventDefault();
+            const numara = document.getElementById('phone').value;
+            
+            if(numara.length !== 10) {
+                addLog("[HATA] Numara 10 haneli olmalıdır.", "log-error");
                 return;
             }
 
-            btn.disabled = true;
-            btn.innerText = "İŞLENİYOR...";
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            sayac = 0;
 
-            addLog(`[BİLGİ] +90 ${cleanPhone} için istek paketi hazırlanıyor...`, 'log-info');
+            addLog(`[BAŞLADI] +90${numara} için döngüsel istekler başlatılıyor...`, "log-info");
 
-            // 1 saniye simülasyon gecikmesi sonrası başarı logu ekleme (utils.php yerine tetikleme görünümü)
-            setTimeout(() => {
-                addLog(`[BAŞARILI] Hedef tanımlandı: +90 ${cleanPhone}`, 'log-success');
-                addLog(`[SİSTEM] spammers/utils.php simülasyonu çalıştırıldı.`, 'log-success');
+            // Ardarda çok hızlı istek simülasyonu (Her 300 milisaniyede bir tetikler)
+            donguInterval = setInterval(() => {
+                sayac++;
+                addLog(`[İSTEK #${sayac}] spammers/utils modülüne sinyal gönderildi.`, "log-success");
                 
-                btn.disabled = false;
-                btn.innerText = "SİSTEMİ BAŞLAT";
-            }, 1200);
+                // Eğer gerçek bir API ucuna istek atmak istersen burayı kullanabilirsin:
+                // fetch('API_URL_BURAYA', { method: 'POST', body: JSON.stringify({phone: numara}) });
+                
+            }, 300); 
+        }
+
+        function durdurDöngü() {
+            if(donguInterval) {
+                clearInterval(donguInterval);
+                donguInterval = null;
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                addLog(`[DURDURULDU] İşlem kullanıcı tarafından kesildi. Toplam istek: ${sayac}`, "log-error");
+            }
         }
 
         function addLog(text, className) {
